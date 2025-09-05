@@ -1,0 +1,14 @@
+[{
+  "modid": "atlasgoodies",
+  "name": "Atlas Goodies",
+  "description": "Additional features for Antique Atlas",
+  "version": "1.0.0",
+  "mcversion": "1.12.2",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["notAxion"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": ["antiqueatlas"]
+}]
