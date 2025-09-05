@@ -1,5 +1,6 @@
 package com.notaxion.atlasgoodies;
 
+import hunternif.mc.atlas.client.gui.GuiAtlas;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -18,25 +19,31 @@ public class GuiHandler {
     public void onGuiInit(GuiScreenEvent.InitGuiEvent.Post event) {
         GuiScreen gui = event.getGui();
 
-        // Check if this is the Antique Atlas GUI
-        if (gui.getClass().getName().contains("GuiAtlas")) {
-            System.out.println("Atlas Goodies: Detected Atlas GUI - " + gui.getClass().getName());
+        // Check if this is specifically the GuiAtlas class
+        if (gui instanceof GuiAtlas) {
+            GuiAtlas atlasGui = (GuiAtlas) gui;
+            System.out.println("Atlas Goodies: Detected Atlas GUI");
 
-            // Add our custom button
-            // Position it at the bottom right of the existing buttons
-            int buttonX = gui.width - 30; // 30 pixels from right edge
-            int buttonY = 200; // Adjust this based on where you want it
+            // Get the atlas GUI dimensions and position
+            int atlasX = atlasGui.getGuiX();
+            int atlasY = atlasGui.getGuiY();
+
+            // Position our button with the existing right-side buttons
+            // The existing buttons are at: atlasX + GuiAtlas.WIDTH + some offset
+            int buttonX = atlasX + GuiAtlas.WIDTH + 5; // 5 pixels right of the atlas
+            int buttonY = atlasY + 110; // Adjust this to position it after existing buttons
 
             GuiButton helloButton = new GuiButton(HELLO_BUTTON_ID, buttonX, buttonY, 20, 20, "H");
             event.getButtonList().add(helloButton);
 
             System.out.println("Atlas Goodies: Added Hello button at " + buttonX + ", " + buttonY);
+            System.out.println("Atlas GUI position: " + atlasX + ", " + atlasY);
         }
     }
 
     @SubscribeEvent
-    public void onGuiAction(GuiScreenEvent.ActionPerformedEvent.Pre event) {
-        if (event.getButton().id == HELLO_BUTTON_ID) {
+    public void onGuiAction(GuiScreenEvent.ActionPerformedEvent.Post event) {
+        if (event.getButton().id == HELLO_BUTTON_ID ) {
             // Send "Hello World" to chat
             Minecraft mc = Minecraft.getMinecraft();
             if (mc.player != null) {
