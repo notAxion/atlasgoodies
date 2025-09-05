@@ -1,6 +1,8 @@
 package com.notaxion.atlasgoodies;
 
 import hunternif.mc.atlas.client.gui.GuiAtlas;
+import hunternif.mc.atlas.marker.DimensionMarkersData;
+import hunternif.mc.atlas.marker.Marker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -10,10 +12,15 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.HashSet;
+
 @SideOnly(Side.CLIENT)
 public class GuiHandler {
 
     private static final int HELLO_BUTTON_ID = 12345;
+    public Field guiAtlasData;
 
     @SubscribeEvent
     public void onGuiInit(GuiScreenEvent.InitGuiEvent.Post event) {
@@ -24,21 +31,58 @@ public class GuiHandler {
             GuiAtlas atlasGui = (GuiAtlas) gui;
             System.out.println("Atlas Goodies: Detected Atlas GUI");
 
-            // Get the atlas GUI dimensions and position
-            int atlasX = atlasGui.getGuiX();
-            int atlasY = atlasGui.getGuiY();
+            DimensionMarkersData atlasMarkerData = null;
 
-            // Position our button with the existing right-side buttons
-            // The existing buttons are at: atlasX + GuiAtlas.WIDTH + some offset
-            int buttonX = atlasX + GuiAtlas.WIDTH + 5; // 5 pixels right of the atlas
-            int buttonY = atlasY + 110; // Adjust this to position it after existing buttons
+            try {
+                atlasMarkerData = getMarkersData(atlasGui);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            }
 
-            GuiButton helloButton = new GuiButton(HELLO_BUTTON_ID, buttonX, buttonY, 20, 20, "H");
-            event.getButtonList().add(helloButton);
+            Collection<Marker> markers = atlasMarkerData.getAllMarkers();
 
-            System.out.println("Atlas Goodies: Added Hello button at " + buttonX + ", " + buttonY);
-            System.out.println("Atlas GUI position: " + atlasX + ", " + atlasY);
+            final HashSet<String> uniqueTypes = new HashSet<>();
+            markers.forEach(marker -> {
+                if (marker.getId() > 0) {
+                    uniqueTypes.add(marker.getType());
+                }
+            });
+
+            addButtons(event, atlasGui, uniqueTypes);
         }
+    }
+
+    private void addButtons(GuiScreenEvent.InitGuiEvent.Post event, GuiAtlas atlasGui, HashSet<String> btnTypes) {
+        // Get the atlas GUI dimensions and position
+        int atlasX = atlasGui.getGuiX();
+        int atlasY = atlasGui.getGuiY();
+
+        // Position our button with the existing left-side buttons
+        int buttonX = atlasX - 10;
+        int buttonY = atlasY + 14;
+
+        GuiButton helloButton = new GuiButton(HELLO_BUTTON_ID, buttonX, buttonY, 20, 20, "H");
+        event.getButtonList().add(helloButton);
+//        for (String type: btnTypes) {
+            // create GuiBookmarkButton
+            // add the button with someway to add the listener
+//        }
+
+        System.out.println("Atlas Goodies: Added Hello button at " + buttonX + ", " + buttonY);
+        System.out.println("Atlas GUI position: " + atlasX + ", " + atlasY);
+    }
+
+    private DimensionMarkersData getMarkersData(GuiAtlas atlasGui) throws NoSuchFieldException, IllegalAccessException {
+        if (guiAtlasData == null) {
+            guiAtlasData = atlasGui.getClass().getDeclaredField("localMarkersData");
+            guiAtlasData.setAccessible(true);
+        }
+
+        Object markersData = guiAtlasData.get(atlasGui);
+
+//        if (markersData instanceof DimensionMarkersData)
+        return (DimensionMarkersData) markersData;
     }
 
     @SubscribeEvent
